@@ -8,9 +8,18 @@ import (
 	"strconv"
 )
 
+var instructionRegex *regexp.Regexp
+
 func Day1() {
+	regex, err := regexp.Compile(`(\w)(\d*)`)
+	if err != nil {
+		log.Fatalf("an error occurred while compiling the regex %s", err.Error())
+	}
+	instructionRegex = regex
+
 	fmt.Printf("Puzzle P1: %s \r\n", solveP1("day-1/input.txt"))
 	fmt.Printf("Puzzle P2: %s \r\n", solveP2("day-1/input.txt"))
+
 }
 
 func solveP2(path string) string {
@@ -70,12 +79,7 @@ func calculatePosition(pos, instruction int) (int, int) {
 }
 
 func parseInstruction(instruction string) int {
-	regex, err := regexp.Compile(`(\w)(\d*)`)
-	if err != nil {
-		log.Fatalf("an error occurred while compiling the regex %s", err.Error())
-	}
-
-	instructionGroups := regex.FindStringSubmatch(instruction)
+	instructionGroups := instructionRegex.FindStringSubmatch(instruction)
 
 	if instructionGroups == nil {
 		log.Fatalf("did not find an instruction in the provided string")
