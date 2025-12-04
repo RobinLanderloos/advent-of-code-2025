@@ -11,7 +11,7 @@ import (
 type getHighestJoltageFunc func(string) int
 
 func Main() {
-	solve("day-3/example-input.txt", getHighestJoltageForLineP2)
+	solve("day-3/input.txt", getHighestJoltageForLineP2)
 }
 
 func solve(path string, gethighgetHighestJoltageFunc getHighestJoltageFunc) {
@@ -29,10 +29,10 @@ func getHighestJoltageForLineP2(line string) int {
 
 	joltageStr := make([]string, 12)
 	innerIndex := 0
-	for i := range 11 {
+	for i := range 12 {
 		highest := 0
 		highestIndex := 0
-		for j := innerIndex; j <= lineLength-12; j++ {
+		for j := innerIndex; j <= lineLength-(12-i); j++ {
 			charInt := int(line[j] - '0')
 			if charInt > highest {
 				highest = charInt
@@ -40,7 +40,8 @@ func getHighestJoltageForLineP2(line string) int {
 			}
 		}
 		joltageStr[i] = strconv.Itoa(highest)
-		innerIndex = highestIndex
+		innerIndex = highestIndex + 1
+		highest = 0
 	}
 
 	joltageInt, err := strconv.Atoi(strings.Join(joltageStr, ""))
