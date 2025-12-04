@@ -2,7 +2,6 @@ package io
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 )
@@ -47,7 +46,6 @@ func ReadLines(path string) []string {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Println(line)
 		lines = append(lines, line)
 	}
 
