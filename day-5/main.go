@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"robinlanderloos/aoc2025/io"
+	"sort"
 	"strconv"
 )
 
@@ -12,33 +13,31 @@ var rangeRegex *regexp.Regexp
 
 func Main() {
 	rangeRegex = regexp.MustCompile(`(\d+)-(\d+)`)
-	solve("day-5/input.txt")
+	solveP2("day-5/input.txt")
 }
 
-func solve(path string) {
-	lines := io.ReadLines(path)
-	freshIds := make(map[int]bool)
+func solveP2(path string) {
+	ranges, _ := parseInput(path)
+	totalFreshIds := 0
+
+	for _, r := range ranges {
+		freshIdsInRange := r[1] - r[0] + 1
+		totalFreshIds += freshIdsInRange
+	}
+
+	fmt.Printf("Total fresh ids: %d", totalFreshIds)
+}
+
+func solveP1(path string) {
 	freshCount := 0
 
-	checkingRanges := true
-	for _, line := range lines {
-		if line == "" {
-			checkingRanges = false
-			continue
-		}
+	ranges, ids := parseInput(path)
 
-		if checkingRanges {
-			fmt.Printf("Adding range '%s' to map", line)
-			addRangesFromLineToMap(line, freshIds)
-		} else {
-			curr, err := strconv.Atoi(line)
-			if err != nil {
-				log.Fatalf("could not convert %s to integer", line)
-			}
-
-			fmt.Printf("Checking if id '%d' in range", curr)
-			if freshIds[curr] {
+	for _, id := range ids {
+		for _, r := range ranges {
+			if id >= r[0] && id <= r[1] {
 				freshCount++
+				continue
 			}
 		}
 	}
@@ -46,20 +45,92 @@ func solve(path string) {
 	fmt.Printf("Found %d fresh ids", freshCount)
 }
 
-func addRangesFromLineToMap(line string, ranges map[int]bool) {
+func parseInput(path string) ([][]int, []int) {
+	ranges := make([][]int, 0)
+	ids := make([]int, 0)
+
+	checkingRanges := true
+	for line := range io.EnumerateFile(path) {
+		// We encountered the middle point of the input
+		if line == "" {
+			checkingRanges = false
+			continue
+		}
+
+		if checkingRanges {
+			low, high := getRangeFromLine(line)
+			r := make([]int, 2)
+			r[0] = low
+			r[1] = high
+			ranges = append(ranges, r)
+		} else {
+			curr, err := strconv.Atoi(line)
+			if err != nil {
+				log.Fatalf("could not convert %s to integer", line)
+			}
+			ids = append(ids, curr)
+		}
+	}
+
+	ranges = mergeRanges(ranges)
+
+	return ranges, ids
+}
+
+func mergeRanges(ranges [][]int) [][]int {
+	result := make([][]int, 0)
+	sort.Slice(ranges, func(i, j int) bool {
+		return ranges[i][0] < ranges[j][0]
+	})
+
+	curr := ranges[0]
+	for i := 1; i < len(ranges); i++ {
+		if rangeOverlaps(curr, ranges[i]) {
+			curr = mergeRange(curr, ranges[i])
+		} else {
+			result = append(result, curr)
+			curr = ranges[i]
+		}
+	}
+
+	if result[len(result)-1][0] != curr[0] && result[len(result)-1][1] != curr[1] {
+		result = append(result, curr)
+	}
+
+	return result
+}
+
+func mergeRange(curr, other []int) []int {
+	merged := make([]int, 2)
+	lowest := 0
+	highest := 0
+	if curr[0] <= other[0] {
+		lowest = curr[0]
+	} else {
+		lowest = other[0]
+	}
+
+	if curr[1] >= other[1] {
+		highest = curr[1]
+	} else {
+		highest = other[1]
+	}
+
+	merged[0] = lowest
+	merged[1] = highest
+
+	return merged
+}
+
+func rangeOverlaps(curr, other []int) bool {
+	return other[0] <= curr[1]+1
+}
+
+func getRangeFromLine(line string) (int, int) {
 	matches := rangeRegex.FindStringSubmatch(line)
-	low, err := strconv.Atoi(matches[1])
-	if err != nil {
-		log.Fatalf("an error occurred while converting the lower bound %s", err.Error())
-	}
 
-	high, err := strconv.Atoi(matches[2])
-	if err != nil {
-		log.Fatalf("an error occurred while converting the higher bound %s", err.Error())
-	}
+	low, _ := strconv.Atoi(matches[1])
+	high, _ := strconv.Atoi(matches[2])
 
-	for i := low; i <= high; i++ {
-		fmt.Printf("Setting freshid [%d]", i)
-		ranges[i] = true
-	}
+	return low, high
 }
