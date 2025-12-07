@@ -20,7 +20,7 @@ func newProblem(size int) *problem {
 }
 
 func (problem *problem) solve() {
-	fmt.Printf("Solving %s for %v\r\n", problem.operation, problem.numbers)
+	fmt.Printf("Solving %s for %v: ", problem.operation, problem.numbers)
 	switch problem.operation {
 	case "*":
 		result := 1
@@ -28,17 +28,17 @@ func (problem *problem) solve() {
 			result *= number
 		}
 		problem.result = result
-		return
 	case "+":
 		result := 0
 		for _, number := range problem.numbers {
 			result += number
 		}
 		problem.result = result
-		return
+	default:
+		panic("unknown operator found")
 	}
 
-	panic("unknown operator found")
+	fmt.Printf("%d\r\n", problem.result)
 }
 
 type transformFunc func([]string) []*problem
@@ -60,7 +60,6 @@ func solve(path string, transformFunc transformFunc) {
 
 	grandTotal := 0
 	for _, problem := range problems {
-		fmt.Printf("Problem: %v\r\n", problem)
 		grandTotal += problem.result
 	}
 
